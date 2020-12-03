@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
 					close(FversP[R]);// on empeche le fils de lire
 				
 					lettre = rand()%26+'A';
+					sleep(3); // le fils attend pendant 3 secondes avant de repondre *** il reflechir  ****
 					write(FversP[W],&lettre,sizeof(lettre) + 1);
 					read(PversF[R],&message,1);
 				
