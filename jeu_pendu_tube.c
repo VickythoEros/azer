@@ -37,11 +37,11 @@ int main(int argc, char* argv[])
 	char dico[6][11] = {"BONJOUR","MONSIEUR","KONE","VAKARAMOKO","ESATIC","ABIDJAN"};
 	
 	int PversF[2],FversP[2];
-	char message[11] ;
+	//char message[11] ;
 	int message1[11];
 	int tailleMotSecret;
 	
-	char lettre = 0; // Stocke la lettre proposée par l'utilisateur (retour du scanf)
+	char lettre=0; // Stocke la lettre proposée par l'utilisateur (retour du scanf)
         char motSecret[11] ; // C'est le mot à trouver
 	
        int i = 0; 
@@ -73,60 +73,72 @@ int main(int argc, char* argv[])
 		};break;
 	case 0:
 		{	// le processus fils
+				int message =0;
+				
+				
+				srand(time(NULL));
+				while(message != 1)
+				{	close(PversF[W]); // on empeche le pere d'ecrire
+					close(FversP[R]);// on empeche le fils de lire
+				
+					lettre = rand()%26+'A';
+					write(FversP[W],&lettre,sizeof(lettre) + 1);
+					read(PversF[R],&message,1);
+				
+				}
+					
+				
+		};break;
+			
+	default:
+			{ // le processus pere
 				
        			int lettreTrouvee[11] = {0};
        			int coupsRestants = 10;
        			
-				close(PversF[W]); // on empeche le pere d'ecrire
-				close(FversP[R]);// on empeche le fils de lire
-				
-				read(PversF[R],message,tailleMotSecret);
-				
-				srand(time(NULL));
-				
 				while (coupsRestants > 0 && !gagne(lettreTrouvee))
-				{
+				{ 	char saisir =0;
+					int stop = 0;
+				
 					printf("\n\nIl vous reste %d coups a jouer", coupsRestants);
 					printf("\nQuel est le mot secret ? ");
 
 
 					for (i = 0 ; i < tailleMotSecret ; i++)
 					{
-					    if (lettreTrouvee[i]) // Si on a trouvé la lettre n° i
-						printf("%c", message[i]); // On l'affiche
+					    if (lettreTrouvee[i]) 
+						printf("%c", motSecret[i]); 
 					    else
-						printf("*"); // Sinon, on affiche une étoile pour les lettres non trouvées
+						printf("*"); 
+					}	
+					
+					close(FversP[W]); //on empeche le fils de d'ecrire
+					close(PversF[R]); // on empeche le pere de lire
+				
+					printf("\nProposez une lettre : ");
+					read(FversP[R],&saisir,sizeof(saisir)+1) ;
+					printf(" %c ",saisir);
+					
+					
+					if (!rechercheLettre(saisir, motSecret, lettreTrouvee))
+					    {
+						coupsRestants--; 
+					    }
+					    
+					if (coupsRestants > 0 && !gagne(lettreTrouvee))
+					{  
+					
+						write(PversF[W],&stop, sizeof(stop) + 1);
+					}
+					else{
+						stop = 1;
+						write(PversF[W],&stop, sizeof(stop) + 1);
 					}
 					
-					printf("\nProposez une lettre : ");
-					
-					
-					lettre = rand()%26+'A'; // generation du mot aleatoire
-					
-					printf(" %c  ",lettre);
-					
-					if (!rechercheLettre(lettre, message, lettreTrouvee))
-					    {
-						coupsRestants--; // On enlève un coup au joueur
-					    }
 				}
 				
 				
-				write(FversP[W],lettreTrouvee,sizeof(tableauLettres) + 1);
-				
-				
-		};break;
-			
-	default:
-			{ // le processus pere
-			
-				close(FversP[W]); //on empeche le fils de d'ecrire
-				close(PversF[R]); // on empeche le pere de lire
-				
-				write(PversF[W],motSecret, sizeof(tableauLettres) + 1);
-				read(FversP[R],message1,tailleMotSecret) ;
-				
-				if (gagne(message1))
+				if (gagne(lettreTrouvee))
 			   	 printf("\n\nGagne ! Le mot secret etait bien : %s \n\n", motSecret);
 				else
 			   	 printf("\n\nPerdu ! Le mot secret etait : %s \n\n", motSecret);
@@ -138,6 +150,8 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+
 
 
 // permet de voir si le mot saisi existe dans la chaine
